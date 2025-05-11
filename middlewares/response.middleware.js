@@ -1,58 +1,21 @@
-import { Router } from "express";
-import { userService } from "../services/userService.js";
-import {
-  createUserValid,
-  updateUserValid,
-} from "../middlewares/user.validation.middleware.js";
-
-const router = Router();
-
-router.get("/", async (req, res) => {
-  try {
-    const users = await userService.getAll();
-    res.sendSuccess(users);
-  } catch (error) {
-    res.sendBadRequest("Failed to retrieve users: " + error.message);
+const responseMiddleware = (req, res, next) => {
+  if (res.data !== undefined) {
+    return res.status(res.statusCode || 200).json(res.data);
   }
-});
 
-router.get("/:id", async (req, res) => {
-  try {
-    const user = await userService.getById(req.params.id);
-    if (!user) return res.sendNotFound("User not found");
-    res.sendSuccess(user);
-  } catch (error) {
-    res.sendBadRequest("Failed to get user: " + error.message);
+  if (res.err) {
+    const statusCode = res.statusCode && res.statusCode !== 200 ? res.statusCode : 500;
+
+    return res.status(statusCode).json({
+      error: res.err.message || "Internal Server Error"
+    });
   }
-});
 
-router.post("/", createUserValid, async (req, res) => {
-  try {
-    const newUser = await userService.create(req.body);
-    res.sendCreated(newUser);
-  } catch (error) {
-    res.sendBadRequest("Failed to create user: " + error.message);
-  }
-});
+  return res.status(500).json({
+    error: "No response data or error provided"
+  });
+};
 
-router.patch("/:id", updateUserValid, async (req, res) => {
-  try {
-    const updatedUser = await userService.update(req.params.id, req.body);
-    if (!updatedUser) return res.sendNotFound("User not found");
-    res.sendSuccess(updatedUser);
-  } catch (error) {
-    res.sendBadRequest("Failed to update user: " + error.message);
-  }
-});
+export { responseMiddleware };
 
-router.delete("/:id", async (req, res) => {
-  try {
-    const deletedUser = await userService.delete(req.params.id);
-    if (!deletedUser) return res.sendNotFound("User not found");
-    res.sendSuccess({ message: "User successfully deleted" });
-  } catch (error) {
-    res.sendBadRequest("Failed to delete user: " + error.message);
-  }
-});
 
-export { router };
