@@ -1,69 +1,85 @@
-import { Router } from "express";
-import { userService } from "../services/userService.js";
-import {
-  createUserValid,
-  updateUserValid,
-} from "../middlewares/user.validation.middleware.js";
+  import { Router } from "express";
+  import { userService } from "../services/userService.js";
+  import {
+    createUserValid,
+    updateUserValid,
+  } from "../middlewares/user.validation.middleware.js";
 
-const router = Router();
+  const router = Router();
 
-
-router.get("/", async (req, res) => {
+router.get("/", async (req, res, next) => {
   try {
     const users = await userService.getAll();
-    res.json(users);
+    res.data = users;
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.err = error;
+    res.status(500);
   }
-});
+  next();
+}, responseMiddleware);
 
 
-router.get("/:id", async (req, res) => {
+router.get("/:id", async (req, res, next) => {
   try {
     const user = await userService.getById(req.params.id);
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      res.status(404);
+      res.err = new Error("User not found");
+    } else {
+      res.data = user;
     }
-    res.json(user);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(500);
+    res.err = error;
   }
-});
+  next();
+}, responseMiddleware);
 
 
-router.post("/", createUserValid, async (req, res) => {
+router.post("/", createUserValid, async (req, res, next) => {
   try {
     const newUser = await userService.create(req.body);
-    res.status(201).json(newUser);
+    res.status(201);
+    res.data = newUser;
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(500);
+    res.err = error;
   }
-});
+  next();
+}, responseMiddleware);
 
 
-router.patch("/api/users/:id", updateUserValid, async (req, res) => {
+router.patch("/:id", updateUserValid, async (req, res, next) => {
   try {
     const updatedUser = await userService.update(req.params.id, req.body);
     if (!updatedUser) {
-      return res.status(404).json({ message: "User not found" });
+      res.status(404);
+      res.err = new Error("User not found");
+    } else {
+      res.data = updatedUser;
     }
-    res.json(updatedUser);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(500);
+    res.err = error;
   }
-});
+  next();
+}, responseMiddleware);
 
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", async (req, res, next) => {
   try {
     const deletedUser = await userService.delete(req.params.id);
     if (!deletedUser) {
-      return res.status(404).json({ message: "User not found" });
+      res.status(404);
+      res.err = new Error("User not found");
+    } else {
+      res.data = { message: "User deleted successfully" };
     }
-    res.json({ message: "User deleted successfully" });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(500);
+    res.err = error;
   }
-});
+  next();
+}, responseMiddleware);
 
-export { router };
+  export { router };
