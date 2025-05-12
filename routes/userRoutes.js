@@ -1,5 +1,6 @@
   import { Router } from "express";
   import { userService } from "../services/userService.js";
+  import { responseMiddleware } from "../middlewares/response.middleware.js";
   import {
     createUserValid,
     updateUserValid,
