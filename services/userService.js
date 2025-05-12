@@ -4,11 +4,7 @@ class UserService {
   async getAll() {
     return await userRepository.getAll();
   }
-  async getById(id) {
-    const user = await userRepository.getById(id);
-    if (!user) return null;
-    return user;
-  }
+ 
   async create(data) {
     const createdUser = await userRepository.create(data);
     return createdUser;

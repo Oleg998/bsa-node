@@ -48,13 +48,13 @@ router.post(
   createFighterValid,
   async (req, res, next) => {
     try {
-      const { email, phone } = req.body;
-      const existingEmail = await fighterService.search({ email });
-      const existingPhone = await fighterService.search({ phone });
+      const { name} = req.body;
+      const existingName = await fighterService.search({ name });
+      
 
-      if (existingEmail || existingPhone) {
+      if (existingName) {
         res.status(400);
-        res.err = new Error("Email or phone in use");
+        res.err = new Error("Name fighter in use");
         return next();
       }
 

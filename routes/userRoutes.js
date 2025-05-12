@@ -22,7 +22,9 @@ router.get("/", async (req, res, next) => {
 
 router.get("/:id", async (req, res, next) => {
   try {
-    const user = await userService.getById(req.params.id);
+    const { id } = req.params;
+    const user = await userService.search({ id }); 
+    
     if (!user) {
       res.status(404);
       res.err = new Error("User not found");
@@ -63,21 +65,49 @@ router.post(
   responseMiddleware
 );
 
-router.patch("/:id", updateUserValid, async (req, res, next) => {
-  try {
-    const updatedUser = await userService.update(req.params.id, req.body);
-    if (!updatedUser) {
-      res.status(404);
-      res.err = new Error("User not found");
-    } else {
+router.patch(
+  "/:id",
+  updateUserValid,
+  async (req, res, next) => {
+    try {
+      const { email, phone } = req.body;
+      const userId = req.params.id;
+
+      if (email) {
+        const existingEmailUser = await userService.search({ email });
+        if (existingEmailUser && existingEmailUser.id !== userId) {
+          res.status(400);
+          res.err = new Error("Email is already in use");
+          return next();
+        }
+      }
+
+      if (phone) {
+        const existingPhoneUser = await userService.search({ phone });
+        if (existingPhoneUser && existingPhoneUser.id !== userId) {
+          res.status(400);
+          res.err = new Error("Phone is already in use");
+          return next();
+        }
+      }
+
+      const updatedUser = await userService.update(userId, req.body);
+      if (!updatedUser) {
+        res.status(404);
+        res.err = new Error("User not found");
+        return next();
+      }
+
       res.data = updatedUser;
+    } catch (error) {
+      res.status(500);
+      res.err = error;
     }
-  } catch (error) {
-    res.status(500);
-    res.err = error;
-  }
-  next();
-}, responseMiddleware);
+
+    next();
+  },
+  responseMiddleware
+);
 
 
 router.delete("/:id", async (req, res, next) => {
