@@ -37,18 +37,31 @@ router.get("/:id", async (req, res, next) => {
 }, responseMiddleware);
 
 
-router.post("/", createUserValid, async (req, res, next) => {
-  try {
-    const newUser = await userService.create(req.body);
-    res.status(201);
-    res.data = newUser;
-  } catch (error) {
-    res.status(500);
-    res.err = error;
-  }
-  next();
-}, responseMiddleware);
+router.post(
+  "/",
+  createUserValid,
+  async (req, res, next) => {
+    try {
+      const { email, phone  } = req.body;
+      const existingEmail = await userService.search({ email });
+      const existingPhone = await userService.search({ phone });
+      if (existingEmail || existingPhone) {
+        res.status(400);
+        res.err = new Error("Email or phone in use");
+        return next();
+      }
+      const newUser = await userService.create(req.body);
 
+      res.status(201);
+      res.data = newUser;
+    } catch (error) {
+      res.status(500);
+      res.err = error;
+    }
+    next();
+  },
+  responseMiddleware
+);
 
 router.patch("/:id", updateUserValid, async (req, res, next) => {
   try {
