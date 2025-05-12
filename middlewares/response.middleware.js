@@ -27,7 +27,7 @@ const responseMiddleware = (req, res, next) => {
 
   return res.status(500).json({
     error: true,
-    message: " Internal Server Error ",
+    message: res.err?.message || "Internal server error",
   });
 };
 
