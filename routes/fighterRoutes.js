@@ -8,6 +8,110 @@ import {
 
 const router = Router();
 
-// TODO: Implement route controllers for fighter
+router.get(
+  "/",
+  async (req, res, next) => {
+    try {
+      const fighters = await fighterService.getAll();
+      res.data = fighters;
+    } catch (error) {
+      res.status(500);
+      res.err = error;
+    }
+    next();
+  },
+  responseMiddleware
+);
+
+router.get(
+  "/:id",
+  async (req, res, next) => {
+    try {
+      const fighter = await fighterService.getById(req.params.id);
+      if (!fighter) {
+        res.status(404);
+        res.err = new Error("Fighter not found");
+      } else {
+        res.data = fighter;
+      }
+    } catch (error) {
+      res.status(500);
+      res.err = error;
+    }
+    next();
+  },
+  responseMiddleware
+);
+
+router.post(
+  "/",
+  createFighterValid,
+  async (req, res, next) => {
+    try {
+      const { email, phone } = req.body;
+      const existingEmail = await fighterService.search({ email });
+      const existingPhone = await fighterService.search({ phone });
+
+      if (existingEmail || existingPhone) {
+        res.status(400);
+        res.err = new Error("Email or phone in use");
+        return next();
+      }
+
+      const newFighter = await fighterService.create(req.body);
+      res.status(201);
+      res.data = newFighter;
+    } catch (error) {
+      res.status(500);
+      res.err = error;
+    }
+    next();
+  },
+  responseMiddleware
+);
+
+router.patch(
+  "/:id",
+  updateFighterValid,
+  async (req, res, next) => {
+    try {
+      const updatedFighter = await fighterService.update(
+        req.params.id,
+        req.body
+      );
+      if (!updatedFighter) {
+        res.status(404);
+        res.err = new Error("Fighter not found");
+      } else {
+        res.data = updatedFighter;
+      }
+    } catch (error) {
+      res.status(500);
+      res.err = error;
+    }
+    next();
+  },
+  responseMiddleware
+);
+
+router.delete(
+  "/:id",
+  async (req, res, next) => {
+    try {
+      const deletedFighter = await fighterService.delete(req.params.id);
+      if (!deletedFighter) {
+        res.status(404);
+        res.err = new Error("Fighter not found");
+      } else {
+        res.data = { message: "Fighter deleted successfully" };
+      }
+    } catch (error) {
+      res.status(500);
+      res.err = error;
+    }
+    next();
+  },
+  responseMiddleware
+);
 
 export { router };
