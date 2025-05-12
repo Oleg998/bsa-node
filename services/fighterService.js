@@ -11,7 +11,8 @@ class FighterService {
   }
 
   async create(data) {
-    return await fighterRepository.create(data);
+    const createdFighter = await fighterRepository.create(data);
+    return createdFighter;
   }
 
   async update(id, data) {

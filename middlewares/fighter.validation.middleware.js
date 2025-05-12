@@ -7,7 +7,7 @@ const isValidPower = (power) => {
 
 const isValidDefense = (defense) => {
   const numericDefense = Number(defense);
-  return numericDefense >= 1 && numericDefense <= 100;
+  return numericDefense >= 1 && numericDefense <= 10;
 };
 
 const isValidHealth = (health) => {

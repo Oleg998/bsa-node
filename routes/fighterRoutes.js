@@ -27,7 +27,8 @@ router.get(
   "/:id",
   async (req, res, next) => {
     try {
-      const fighter = await fighterService.getById(req.params.id);
+      const { id } = req.params;
+      const fighter = await fighterService.search({ id });
       if (!fighter) {
         res.status(404);
         res.err = new Error("Fighter not found");
@@ -48,17 +49,16 @@ router.post(
   createFighterValid,
   async (req, res, next) => {
     try {
-      const { name} = req.body;
+      const { name, health = 85 } = req.body;
       const existingName = await fighterService.search({ name });
-      
-
       if (existingName) {
         res.status(400);
-        res.err = new Error("Name fighter in use");
+        res.err = new Error("Name  in use");
         return next();
       }
+      const fighterData = { ...req.body, health };
+      const newFighter = await fighterService.create(fighterData);
 
-      const newFighter = await fighterService.create(req.body);
       res.status(201);
       res.data = newFighter;
     } catch (error) {
@@ -75,20 +75,30 @@ router.patch(
   updateFighterValid,
   async (req, res, next) => {
     try {
-      const updatedFighter = await fighterService.update(
-        req.params.id,
-        req.body
-      );
+      const { name } = req.body;
+      const userId = req.params.id;
+
+      if (name) {
+        const existingName = await fighterService.search({ name });
+        if (existingName && existingName.id !== userId) {
+          res.status(400);
+          res.err = new Error("Name is already in use");
+          return next();
+        }
+      }
+      const updatedFighter = await fighterService.update(userId, req.body);
       if (!updatedFighter) {
         res.status(404);
         res.err = new Error("Fighter not found");
-      } else {
-        res.data = updatedFighter;
+        return next();
       }
+
+      res.data = updatedFighter;
     } catch (error) {
       res.status(500);
       res.err = error;
     }
+
     next();
   },
   responseMiddleware
